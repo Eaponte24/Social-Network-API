@@ -56,4 +56,41 @@ module.exports = {
             res.status(500).json(err);
         }
     },
+
+    // Add a new friend to a user's friend list
+    addFriend: async (req, res) => {
+        try {
+            const user = await User.findById(req.params.id);
+            const friend = await User.findById(req.params.friendId);
+            if (!user.friends.includes(friend._id)) {
+                await user.updateOne({ $push: { friends: friend._id } });
+                await friend.updateOne({ $push: { friends: user._id } });
+                res.status(200).json("Friend has been added!");
+            } else {
+                res.status(403).json("You are already friends!");
+            }
+        }
+        catch (err) {
+            res.status(500).json(err);
+        }   
+    },
+
+    // Remove a friend from a user's friend list
+    removeFriend: async (req, res) => {
+        try {
+            const user = await User.findById(req.params.id);
+            const friend = await User.findById(req.params.friendId);
+            if (user.friends.includes(friend._id)) {
+                await user.updateOne({ $pull: { friends: friend._id } });
+                await friend.updateOne({ $pull: { friends: user._id } });
+                res.status(200).json("Friend has been removed!");
+            } else {
+                res.status(403).json("You are not friends!");
+            }
+        }
+        catch (err) {
+            res.status(500).json(err);
+        }
+    }
+    
 };
