@@ -66,6 +66,38 @@ module.exports = {
         }
     },
 
+    // Delete a thought by its _id and remove the thought's _id from any associated users' thoughts array field
+    deleteThought: async (req, res) => {
+        try {
+            const thought = await Thought.findByIdAndDelete(req.params.id)
+            .then(dbThoughtData => {
+                if (!dbThoughtData) {
+                    res.status(404).json({ message: 'No thought with this id!' });
+                    return;
+                }
+                return User.findOneAndUpdate(
+                    { username: dbThoughtData.username },
+                    { $pull: { thoughts: req.params.id } },
+                    { new: true }
+                );
+            })
+            .then(dbUserData => {
+                if (!dbUserData) {
+                    res.status(404).json({ message: 'Thought deleted, but no user found' });
+                    return;
+                }
+                res.json(dbUserData);
+            })
+            .catch(err => res.json(err));
+            res.status(200).json(thought);
+        } catch (err) {
+            res.status(500).json(err);
+        }
+    },
+
+            
+       
+
 };
     
       
